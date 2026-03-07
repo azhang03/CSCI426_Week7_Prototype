@@ -11,9 +11,9 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
+  - Player
+  - Enemy
+  - Barrier
   - 
   - 
   - 
@@ -43,6 +43,9 @@ TagManager:
     locked: 0
   - name: Floor
     uniqueID: 3634945755
+    locked: 0
+  - name: Barriers
+    uniqueID: 2294186717
     locked: 0
   - name: Entities
     uniqueID: 3040778641
