@@ -6,8 +6,8 @@ using UnityEngine.SceneManagement;
 ///
 /// On death the scene is reloaded after a short delay so the player can see
 /// the fully red silhouette for a moment before reset.
-/// On level complete the scene reloads as a placeholder — replace with a proper
-/// scene transition or UI screen when ready.
+/// On level complete all enemies freeze in place so the player feels safe,
+/// then the scene reloads after a delay.
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -50,7 +50,45 @@ public class GameManager : MonoBehaviour
 
         State = GameState.LevelComplete;
         Debug.Log("[GameManager] Level complete!");
+
+        FreezeAllEnemies();
+
         Invoke(nameof(ReloadScene), levelCompleteReloadDelay);
+    }
+
+    /// <summary>
+    /// Disables every EnemyController in the scene and zeroes their velocity
+    /// so they stop mid-patrol. Also disables all FlashlightCone and LightZone
+    /// damage so the player doesn't take hits after reaching the exit.
+    /// </summary>
+    private void FreezeAllEnemies()
+    {
+        // Freeze patrol enemies.
+        foreach (EnemyController ec in FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            ec.enabled = false;
+            Rigidbody2D rb = ec.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+                rb.bodyType = RigidbodyType2D.Static;
+            }
+        }
+
+        // Disable all flashlight cone damage scripts.
+        foreach (FlashlightCone fc in FindObjectsByType<FlashlightCone>(FindObjectsSortMode.None))
+        {
+            fc.enabled = false;
+        }
+
+        // Disable all static light zone damage scripts.
+        foreach (LightZone lz in FindObjectsByType<LightZone>(FindObjectsSortMode.None))
+        {
+            lz.enabled = false;
+        }
+
+        Debug.Log("[GameManager] All enemies frozen, all damage sources disabled.");
     }
 
     private void ReloadScene()

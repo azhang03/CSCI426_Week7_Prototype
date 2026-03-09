@@ -24,6 +24,9 @@ public struct PatrolSegment
 ///
 /// The enemy's rotation is updated each frame to face the current movement
 /// direction so the child flashlight cone naturally points forward.
+///
+/// Automatically freezes when the GameManager state is not Playing (e.g.
+/// when the player reaches the exit or dies).
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyController : MonoBehaviour
@@ -54,6 +57,13 @@ public class EnemyController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Stop all movement if the game is over (level complete or player dead).
+        if (GameManager.Instance != null && GameManager.Instance.State != GameManager.GameState.Playing)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         if (patrolPath == null || patrolPath.Length == 0) return;
 
         PatrolSegment seg = patrolPath[currentSegmentIndex];

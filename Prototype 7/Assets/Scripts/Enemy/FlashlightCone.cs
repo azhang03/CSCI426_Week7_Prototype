@@ -9,9 +9,7 @@ using UnityEngine;
 /// If a Barrier-layer object blocks the ray, the player is in shadow and takes
 /// no damage. Otherwise, damage is applied continuously (damage per second).
 ///
-/// The PolygonCollider2D points should be shaped to approximate the Light2D
-/// Spot cone — set the inner/outer radius and angle on the Light2D, then
-/// manually match the collider shape in the Inspector.
+/// Automatically stops dealing damage when the game is not in the Playing state.
 /// </summary>
 [RequireComponent(typeof(PolygonCollider2D))]
 public class FlashlightCone : MonoBehaviour
@@ -36,10 +34,27 @@ public class FlashlightCone : MonoBehaviour
             playerHealth = playerObj.GetComponent<PlayerHealth>();
     }
 
+    /// <summary>Returns true if the game is still active.</summary>
+    private bool IsGameActive()
+    {
+        return GameManager.Instance == null || GameManager.Instance.State == GameManager.GameState.Playing;
+    }
+
     private void OnTriggerStay2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
         if (playerHealth == null) return;
+
+        // Stop all damage when the game is over.
+        if (!IsGameActive())
+        {
+            if (playerInSight)
+            {
+                playerInSight = false;
+                playerHealth.UnregisterLightHit();
+            }
+            return;
+        }
 
         bool hasLoS = HasLineOfSight(other.transform.position);
 
@@ -84,8 +99,6 @@ public class FlashlightCone : MonoBehaviour
 
     /// <summary>
     /// Returns true if there is no Barrier between this flashlight's root and the target position.
-    /// The ray originates from this object's parent (the enemy root) so walls are tested from
-    /// the correct source position.
     /// </summary>
     private bool HasLineOfSight(Vector2 targetPosition)
     {
@@ -93,7 +106,6 @@ public class FlashlightCone : MonoBehaviour
         Vector2 direction = targetPosition - origin;
         float distance = direction.magnitude;
 
-        // Cast only against Barrier layer — ignore everything else.
         RaycastHit2D hit = Physics2D.Raycast(origin, direction.normalized, distance, barrierLayerMask);
         return hit.collider == null;
     }

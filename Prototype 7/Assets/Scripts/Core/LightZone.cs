@@ -4,16 +4,7 @@ using UnityEngine;
 /// A rectangular area of static light that damages the player while they
 /// stand in it. Attach to a GameObject with a BoxCollider2D (trigger).
 ///
-/// Scale the GameObject's transform to change the size/aspect ratio of
-/// the light strip. The BoxCollider2D and any child Light2D will scale
-/// with the transform, keeping the damage zone and visuals matched.
-///
-/// Unlike FlashlightCone, this does NOT raycast for barriers — the visual
-/// Light2D handles shadow casting via ShadowCaster2D, and if the player
-/// is physically inside the trigger, they take damage. Barriers block
-/// the player from entering the lit area anyway since they have solid
-/// colliders. If you need barrier-aware damage, add a barrierLayerMask
-/// field and a raycast check similar to FlashlightCone.
+/// Automatically stops dealing damage when the game is not in the Playing state.
 /// </summary>
 [RequireComponent(typeof(BoxCollider2D))]
 public class LightZone : MonoBehaviour
@@ -34,10 +25,26 @@ public class LightZone : MonoBehaviour
             playerHealth = playerObj.GetComponent<PlayerHealth>();
     }
 
+    private bool IsGameActive()
+    {
+        return GameManager.Instance == null || GameManager.Instance.State == GameManager.GameState.Playing;
+    }
+
     private void OnTriggerStay2D(Collider2D other)
     {
         if (!other.CompareTag("Player")) return;
         if (playerHealth == null) return;
+
+        // Stop all damage when the game is over.
+        if (!IsGameActive())
+        {
+            if (playerInZone)
+            {
+                playerInZone = false;
+                playerHealth.UnregisterLightHit();
+            }
+            return;
+        }
 
         if (!playerInZone)
         {
