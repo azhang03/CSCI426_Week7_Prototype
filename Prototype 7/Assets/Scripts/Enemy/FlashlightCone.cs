@@ -22,16 +22,35 @@ public class FlashlightCone : MonoBehaviour
     [Tooltip("Physics layer mask for Barrier objects. Raycasts check only this layer.")]
     public LayerMask barrierLayerMask;
 
-    // Cached reference — resolved once on Start via tag.
     private PlayerHealth playerHealth;
-    // True when the player is inside the trigger collider AND has clear LoS.
+    private Transform playerTransform;
     private bool playerInSight = false;
+    // True when the player's collider is inside the cone trigger (regardless of LoS).
+    private bool playerInCone = false;
 
     private void Start()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
+        {
             playerHealth = playerObj.GetComponent<PlayerHealth>();
+            playerTransform = playerObj.transform;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (playerInCone && playerTransform != null)
+        {
+            Vector2 toPlayer = (Vector2)playerTransform.position - (Vector2)transform.position;
+            float angle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg - 90f;
+            float parentAngle = transform.parent != null ? transform.parent.eulerAngles.z : 0f;
+            transform.localRotation = Quaternion.Euler(0f, 0f, angle - parentAngle);
+        }
+        else
+        {
+            transform.localRotation = Quaternion.identity;
+        }
     }
 
     /// <summary>Returns true if the game is still active.</summary>
@@ -45,7 +64,8 @@ public class FlashlightCone : MonoBehaviour
         if (!other.CompareTag("Player")) return;
         if (playerHealth == null) return;
 
-        // Stop all damage when the game is over.
+        playerInCone = true;
+
         if (!IsGameActive())
         {
             if (playerInSight)
@@ -81,6 +101,8 @@ public class FlashlightCone : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
+        playerInCone = false;
+
         if (playerInSight)
         {
             playerInSight = false;
@@ -90,6 +112,8 @@ public class FlashlightCone : MonoBehaviour
 
     private void OnDisable()
     {
+        playerInCone = false;
+
         if (playerInSight && playerHealth != null)
         {
             playerInSight = false;

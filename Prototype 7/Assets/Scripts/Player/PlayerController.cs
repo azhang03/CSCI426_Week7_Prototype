@@ -14,7 +14,9 @@ public class PlayerController : MonoBehaviour
     public Tilemap floorTilemap;
 
     private Rigidbody2D rb;
+    private Collider2D playerCollider;
     private Vector2 moveInput;
+    private bool noclipEnabled = false;
 
     // World-space boundary values computed once from the tilemap.
     private float minX, maxX, minY, maxY;
@@ -30,6 +32,8 @@ public class PlayerController : MonoBehaviour
         rb.gravityScale = 0f;
         rb.freezeRotation = true;
         rb.sleepMode = RigidbodySleepMode2D.NeverSleep;
+
+        playerCollider = GetComponent<Collider2D>();
     }
 
     private void Start()
@@ -39,6 +43,23 @@ public class PlayerController : MonoBehaviour
             colliderHalfSize = col.size * 0.5f;
 
         ComputeBounds();
+    }
+
+    private void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.backquoteKey.wasPressedThisFrame)
+            SetNoclip(!noclipEnabled);
+    }
+
+    private void SetNoclip(bool enabled)
+    {
+        noclipEnabled = enabled;
+
+        // Exclude/restore the player from all collision layers when noclip is toggled.
+        if (playerCollider != null)
+            playerCollider.excludeLayers = enabled ? ~0 : 0;
+
+        Debug.Log($"[Debug] Noclip {(enabled ? "ON" : "OFF")}");
     }
 
     private void ComputeBounds()
@@ -67,7 +88,7 @@ public class PlayerController : MonoBehaviour
     {
         rb.linearVelocity = moveInput * moveSpeed;
 
-        if (hasBounds)
+        if (hasBounds && !noclipEnabled)
         {
             Vector2 pos = rb.position;
             pos.x = Mathf.Clamp(pos.x, minX + colliderHalfSize.x, maxX - colliderHalfSize.x);

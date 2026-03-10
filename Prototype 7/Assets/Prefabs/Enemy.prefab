@@ -135,6 +135,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   patrolPath: []
   loopPath: 1
+  enableDetection: 0
+  detectionRange: 15
+  chaseSpeed: 4
+  barrierLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &8538975698596238590
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,7 +293,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c638da21675cae449bc829728a8a5c38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlashlightCone
-  damagePerSecond: 25
+  damagePerSecond: 40
   barrierLayerMask:
     serializedVersion: 2
     m_Bits: 256
